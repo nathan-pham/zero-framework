@@ -59,13 +59,13 @@ export default class Zero extends HTMLElement {
     connectedCallback() {
         if (isFunction(this.mount)) {
             this._internalMount();
-            this.mount(this);
+            this.mount();
         }
     }
 
     disconnectedCallback() {
         if (isFunction(this.unmount)) {
-            this.unmount(this);
+            this.unmount();
         }
     }
 
@@ -126,7 +126,7 @@ export default class Zero extends HTMLElement {
 
         // prettier-ignore
         // set new styles
-        const newStyle = isFunction(this.style) ? this.style(this) : this.style
+        const newStyle = isFunction(this.style) ? this.style() : this.style
         if (newStyle && newStyle !== this._styleElement.textContent) {
             this._styleElement.textContent = newStyle;
         }
