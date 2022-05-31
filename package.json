@@ -1,0 +1,16 @@
+{
+    "name": "zero-framework",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "esbuild js/index.js --minify --bundle --outfile=Zero.min.js"
+    },
+    "keywords": [],
+    "author": "Nathan Pham",
+    "license": "ISC",
+    "devDependencies": {
+        "esbuild": "^0.14.42"
+    }
+}

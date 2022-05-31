@@ -1,91 +1,127 @@
 export default class ZeroDOM {
-    constructor() {}
-
-    // get list of attributes from node
-    static getAttributes(attributes) {
-        const _attributes = [];
-        for (let i = 0; i < attributes.length; i++) {
-            _attributes.push(attributes[i].name);
-        }
-
-        return _attributes;
+    static _getAttributes(node) {
+        return [...node.attributes].map((attr) => attr.name);
     }
 
-    // create obj with useful properties
-    static createNode(node, parent) {
-        if (!node) {
-            return null;
-        }
-
-        const type = node.nodeType === 3 ? "text" : node.tagName.toLowerCase();
-
-        return {
-            attributes:
-                type !== "text" && node.hasAttributes()
-                    ? ZeroDOM.getAttributes(node.attributes)
-                    : [],
-
-            children: [...node.childNodes].map((childNode) =>
-                ZeroDOM.createNode(childNode, node)
-            ),
-
-            content:
-                node.childNodes && node.childNodes.length > 0
-                    ? null
-                    : node.textContent,
-
-            parent,
-            node,
-            type,
-        };
+    static _getNodeType(node) {
+        if (node.nodeType === 3) return "text";
+        if (node.nodeType === 8) return "comment";
+        if (node.nodeType === 11) return "fragment";
+        return node.tagName.toLowerCase();
     }
 
-    // update an old node with new properties & event listeners
-    static update(oldNode, newNode) {
-        if (oldNode.type === "text") {
-            oldNode.parent.textContent = newNode.content;
+    static _getNodeContent(node) {
+        if (node.childNodes && node.childNodes.length > 0) return null;
+        return node.textContent;
+    }
+
+    static update(template, elem) {
+        if (
+            this._getNodeType(template) === "text" ||
+            this._getNodeType(elem) === "text"
+        ) {
             return;
         }
 
-        const allAttributes = [...oldNode.attributes, ...newNode.attributes];
+        // all attributes with filtered duplicates
+        const allAttributes = [
+            ...new Set([
+                ...ZeroDOM._getAttributes(template),
+                ...ZeroDOM._getAttributes(elem),
+            ]),
+        ];
 
-        const setProp = (key, value) => {
-            key.startsWith("on")
-                ? (oldNode.node[key.toLowerCase()] = value)
-                : oldNode.node.setAttributeNS(null, key, value);
+        const setProp = (attribute, value) => {
+            attribute.startsWith("on")
+                ? (elem[attribute.toLowerCase()] = value)
+                : elem.setAttributeNS(null, attribute, value);
         };
 
-        const removeProp = (key) => {
-            key.startsWith("on")
-                ? (oldNode.node[key.toLowerCase()] = "")
-                : oldNode.node.removeAttribute(key);
+        const removeProp = (attribute) => {
+            attribute.startsWith("on")
+                ? (elem[attribute.toLowerCase()] = () => {})
+                : elem.removeAttribute(attribute);
         };
 
         for (const attribute of allAttributes) {
-            const oldValue = oldNode.node.getAttribute(key);
-            const newValue = newNode.node.getAttribute(key);
+            const templateValue = template.getAttribute(attribute);
+            const elemValue = elem.getAttribute(attribute);
 
-            // set a new value
-            if (!oldValue || oldValue !== newValue) {
-                setProp(attribute, newValue);
-            } else if (!newValue) {
+            if (!elemValue || elemValue !== templateValue) {
+                setProp(attribute, templateValue);
+            } else if (!templateValue) {
                 removeProp(attribute);
             }
         }
     }
 
-    // not a diffing algorithm (basically update stuff and otherwise replace)
-    static diff(oldNode, newNode) {
-        if (!newNode) {
-            oldNode.node.remove();
-        } else if (oldNode.children.length !== newNode.children.length) {
-            oldNode.node.replaceWith(newNode.node);
-        } else {
-            ZeroDOM.update(oldNode, newNode);
+    static diff(template, elem) {
+        const domNodes = [...elem.childNodes];
+        const templateNodes = [...template.childNodes];
 
-            oldNode.children.forEach((child, i) => {
-                ZeroDOM.diff(child, newNode.children[i]);
-            });
+        // update parent node attributes
+        if (this._getNodeType(template) !== this._getNodeType(elem)) {
+            elem.replaceWith(template);
+            return;
         }
+
+        // removing extra elements
+        const count = domNodes.length - templateNodes.length;
+        if (count > 0) {
+            for (let i = count; i > 0; i--) {
+                domNodes[domNodes.length - count].remove();
+            }
+        }
+
+        templateNodes.forEach((node, i) => {
+            // create element if it does not exist
+            if (!domNodes[i]) {
+                elem.appendChild(node);
+                return;
+            }
+
+            // update node if same type, otherwise replace
+            if (this._getNodeType(node) !== this._getNodeType(domNodes[i])) {
+                domNodes[i].replaceWith(node);
+                return;
+            }
+
+            // update attributes
+            ZeroDOM.update(node, domNodes[i]);
+
+            // update content
+            const templateContent = this._getNodeContent(node);
+            if (
+                templateContent &&
+                templateContent !== this._getNodeContent(domNodes[i])
+            ) {
+                domNodes[i].textContent = templateContent;
+            }
+
+            // if target element is empty, wipe it
+            if (
+                domNodes[i].childNodes.length > 0 &&
+                node.childNodes.length < 1
+            ) {
+                domNodes[i].innerHTML = "";
+                return;
+            }
+
+            // build new element
+            if (
+                domNodes[i].childNodes.length < 1 &&
+                node.childNodes.length > 0
+            ) {
+                const fragment = document.createDocumentFragment();
+                this.diff(node, fragment);
+                domNodes[i].appendChild(fragment);
+                return;
+            }
+
+            // diff node child elements
+            if (node.childNodes.length > 0) {
+                this.diff(node, domNodes[i]);
+            }
+        });
     }
 }

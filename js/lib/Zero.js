@@ -1,5 +1,5 @@
 import ZeroDOM from "./ZeroDOM.js";
-import { isFunction } from "../utils.js";
+import { isFunction } from "./utils.js";
 
 export default class Zero extends HTMLElement {
     props = {};
@@ -106,9 +106,12 @@ export default class Zero extends HTMLElement {
         if (genesis) {
             this.shadowRoot.appendChild(this.render());
         } else {
+            const rendered = this.render();
+            const isFragment = ZeroDOM._getNodeType(rendered) === "fragment";
+
             ZeroDOM.diff(
-                ZeroDOM.createNode(this.shadowRoot.firstChild, this.shadowRoot),
-                ZeroDOM.createNode(this.render(), this.shadowRoot)
+                rendered,
+                isFragment ? this.shadowRoot : this.shadowRoot.firstChild
             );
         }
 

@@ -1,9 +1,8 @@
-import Zero from "./lib/Zero.js";
-import { jsh, $ } from "./utils.js";
+import Zero, { jsh } from "./index.js";
 
 Zero.define(
     "z-counter",
-    class Counter extends Zero {
+    class ZCounter extends Zero {
         state = {
             count: 0,
         };
@@ -13,13 +12,22 @@ Zero.define(
         }
 
         render() {
-            return jsh.div(
+            return jsh.fragment(
                 {},
                 jsh.p({}, `count: ${this.state.count}`),
-                (this.state.count > 10
+
+                jsh.button(
+                    {
+                        onClick: () => this.onClick(),
+                        style: `color: ${
+                            this.state.count < 10 ? "blue" : "red"
+                        }`,
+                    },
+                    "increment"
+                ),
+                this.state.count > 10
                     ? jsh.p({}, "lmao you really be trying")
-                    : null),
-                jsh.button({ onClick: () => this.onClick() }, "increment")
+                    : null
             );
         }
     }

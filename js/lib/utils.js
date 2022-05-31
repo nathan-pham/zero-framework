@@ -1,5 +1,5 @@
 // convert camel case to snake case
-export const camelToSnake = (str) => {
+const camelToSnake = (str) => {
     let snakeCase = "";
 
     for (const char of str) {
@@ -12,17 +12,23 @@ export const camelToSnake = (str) => {
 
 // create elements in js more easily
 const h = (tag, props = {}, children = []) => {
-    const element = document.createElement(tag);
+    const isFragment = tag === "fragment";
+    const element = isFragment
+        ? document.createDocumentFragment()
+        : document.createElement(tag);
 
     // set props & event listeners
-    for (const [key, value] of Object.entries(props)) {
-        key.startsWith("on")
-            ? element.addEventListener(key.substring(2).toLowerCase(), value)
-            : element.setAttribute(key, value);
+    if (!isFragment) {
+        for (const [key, value] of Object.entries(props)) {
+            key.startsWith("on")
+                ? (element[key.toLowerCase()] = value)
+                : element.setAttribute(key, value);
+        }
     }
 
     // loop through the children
-    for (const child of children.flat(Infinity).filter((c) => c)) {
+    const formattedChildren = children.flat(Infinity).filter((c) => c);
+    for (const child of formattedChildren) {
         typeof child == "string"
             ? element.appendChild(document.createTextNode(child))
             : element.appendChild(child);
@@ -57,4 +63,4 @@ export const $$ = (parent, selector) => {
 };
 
 // is type a function
-export const isFunction = (prop) => typeof prop === "function";
+export const isFunction = (prop) => prop && typeof prop === "function";
