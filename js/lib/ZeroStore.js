@@ -1,16 +1,30 @@
 export default class ZeroStore {
-    eventListeners = [];
+    subscriptions = [];
 
     initialState = {};
     state = {};
 
-    constructor(initialState = {}) {
+    reducer = () => {};
+
+    constructor(initialState = {}, reducer = () => {}) {
         this.initialState = initialState;
-        this.state = this.createIndependentStore(this.initialState);
+        this.state = this.createStore(this.initialState);
+
+        this.reducer = reducer;
     }
 
-    on(name, cb) {
-        this.eventListeners.push({ name, cb });
+    // action = { type, payload }
+    dispatch(action) {
+        const result = this.reducer(this.state, action);
+        Object.assign(this.state, result);
+    }
+
+    getState() {
+        return this.state;
+    }
+
+    addSubscription(cb) {
+        this.subscriptions.push(cb);
     }
 
     getEventListeners(name) {
@@ -20,11 +34,11 @@ export default class ZeroStore {
     }
 
     // main logic for creating a proxy store
-    createIndependentStore(state) {
+    createStore(state) {
         const stateHandler = {
             set: (target, key, value) => {
                 target[key] = createProxy(value);
-                this.getEventListeners("change").forEach((cb) => cb());
+                this.subscriptions.forEach((subscription) => subscription());
                 return true;
             },
         };

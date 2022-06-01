@@ -5,6 +5,7 @@ import { isFunction } from "./utils.js";
 export default class Zero extends HTMLElement {
     props = {};
     state = {};
+    store = {};
     style = "";
 
     constructor() {
@@ -27,16 +28,16 @@ export default class Zero extends HTMLElement {
 
     // convert state into a Proxy
     _createStore() {
-        const store =
-            this.state instanceof ZeroStore
-                ? this.state
-                : new ZeroStore(this.state);
+        this.store =
+            this.store instanceof ZeroStore
+                ? this.store
+                : new ZeroStore(this.store);
 
-        store.on("change", () => {
+        this.store.addSubscription(() => {
             this._updateDOM();
         });
 
-        return store.state;
+        return this.store;
     }
 
     // handle mounting & unmounting components

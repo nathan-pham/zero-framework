@@ -1,34 +1,45 @@
 import Zero, { ZeroUtils, ZeroStore } from "./index.js";
 const jsh = ZeroUtils.jsh;
 
-const store = new ZeroStore({
-    count: 0,
+const globalStore = new ZeroStore({ count: 0 }, (state, action) => {
+    switch (action.type) {
+        case "increment":
+            return {
+                ...state,
+                count: state.count + 1,
+            };
+
+        default:
+            return state;
+    }
 });
 
 Zero.define(
     "z-counter",
     class ZCounter extends Zero {
-        state = store;
+        store = globalStore;
 
         onClick() {
-            this.state.count++;
+            globalStore.dispatch({
+                type: "increment",
+            });
         }
 
         render() {
             return jsh.fragment(
                 {},
-                jsh.p({}, `count: ${this.state.count}`),
+                jsh.p({}, `count: ${globalStore.state.count}`),
 
                 jsh.button(
                     {
                         onClick: () => this.onClick(),
                         style: `color: ${
-                            this.state.count < 10 ? "blue" : "red"
+                            globalStore.state.count < 10 ? "blue" : "red"
                         }`,
                     },
                     "increment"
                 ),
-                this.state.count > 10
+                globalStore.state.count > 10
                     ? jsh.p({}, "lmao you really be trying")
                     : null
             );
