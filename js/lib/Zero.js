@@ -1,4 +1,5 @@
 import ZeroDOM from "./ZeroDOM.js";
+import ZeroStore from "./ZeroStore.js";
 import { isFunction } from "./utils.js";
 
 export default class Zero extends HTMLElement {
@@ -25,34 +26,17 @@ export default class Zero extends HTMLElement {
     unmount() {}
 
     // convert state into a Proxy
-    _createStore(state) {
-        const stateHandler = {
-            set: (target, key, value) => {
-                target[key] = createProxy(value);
-                this._updateDOM();
-                return true;
-            },
-        };
+    _createStore() {
+        const store =
+            this.state instanceof ZeroStore
+                ? this.state
+                : new ZeroStore(this.state);
 
-        const createProxy = (variable = {}) => {
-            if (Array.isArray(variable)) {
-                for (let i = 0; i < variable.length; i++) {
-                    variable[i] = createProxy(variable);
-                }
-            } else {
-                for (const [key, value] of Object.entries(variable)) {
-                    variable[key] = createProxy(value);
-                }
-            }
+        store.on("change", () => {
+            this._updateDOM();
+        });
 
-            const canProxy =
-                (typeof variable == "object" || Array.isArray(variable)) &&
-                variable !== null;
-
-            return canProxy ? new Proxy(variable, stateHandler) : variable;
-        };
-
-        return createProxy(state);
+        return store.state;
     }
 
     // handle mounting & unmounting components
@@ -71,7 +55,7 @@ export default class Zero extends HTMLElement {
 
     _internalMount() {
         this.props = this._createProps();
-        this.state = this._createStore(this.state);
+        this.state = this._createStore();
 
         this._updateDOM(true);
         this._trackMutations();

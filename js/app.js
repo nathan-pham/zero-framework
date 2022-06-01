@@ -1,11 +1,14 @@
-import Zero, { jsh } from "./index.js";
+import Zero, { ZeroUtils, ZeroStore } from "./index.js";
+const jsh = ZeroUtils.jsh;
+
+const store = new ZeroStore({
+    count: 0,
+});
 
 Zero.define(
     "z-counter",
     class ZCounter extends Zero {
-        state = {
-            count: 0,
-        };
+        state = store;
 
         onClick() {
             this.state.count++;

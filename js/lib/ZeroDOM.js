@@ -15,6 +15,7 @@ export default class ZeroDOM {
         return node.textContent;
     }
 
+    // update element attributes & event listeners
     static update(template, elem) {
         if (
             this._getNodeType(template) === "text" ||
@@ -43,6 +44,7 @@ export default class ZeroDOM {
                 : elem.removeAttribute(attribute);
         };
 
+        // loop through each attribute & add/remove as needed
         for (const attribute of allAttributes) {
             const templateValue = template.getAttribute(attribute);
             const elemValue = elem.getAttribute(attribute);
