@@ -4,7 +4,7 @@
 
 The frameworkless framework for building reactive UIs with web components. Builds off of my previous library, styled components, but implements a more robust and versatile diffing system without a "virtual" intermediatory.
 
-Zero is extremely light weight at only 3.4 kb (minified).
+Zero is extremely light weight at only 4.1 kb (minified).
 
 ## Usage
 

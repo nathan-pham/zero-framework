@@ -5,7 +5,7 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "esbuild js/index.js --minify --bundle --outfile=Zero.min.js"
+        "build": "esbuild js/index.js --minify --bundle --outdir=build --format=esm"
     },
     "keywords": [],
     "author": "Nathan Pham",
