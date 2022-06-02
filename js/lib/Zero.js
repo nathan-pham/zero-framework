@@ -4,9 +4,11 @@ import { isFunction } from "./utils.js";
 
 export default class Zero extends HTMLElement {
     props = {};
-    state = {};
     store = {};
     style = "";
+
+    _debounce = null;
+    _mounted = false;
 
     constructor() {
         super();
@@ -36,16 +38,22 @@ export default class Zero extends HTMLElement {
         this.store.addSubscription(() => {
             this._updateDOM();
         });
-
-        return this.store;
     }
 
     // handle mounting & unmounting components
     connectedCallback() {
-        if (isFunction(this.mount)) {
-            this._internalMount();
-            this.mount();
+        if (this._debounce) {
+            cancelAnimationFrame(this._debounce);
         }
+
+        this._debounce = requestAnimationFrame(() => {
+            if (!this._mounted) {
+                this._internalMount();
+                if (isFunction(this.mount)) {
+                    this.mount();
+                }
+            }
+        });
     }
 
     disconnectedCallback() {
@@ -55,11 +63,13 @@ export default class Zero extends HTMLElement {
     }
 
     _internalMount() {
-        this.props = this._createProps();
-        this.state = this._createStore();
+        this._createProps();
+        this._createStore();
 
         this._updateDOM(true);
         this._trackMutations();
+
+        this._mounted = true;
     }
 
     // update DOM when component changes
@@ -82,25 +92,30 @@ export default class Zero extends HTMLElement {
         }
 
         props.children = [...this.childNodes];
-
-        return props;
+        this.props = props;
     }
 
     // update DOM & styles
     _updateDOM(genesis) {
-        if (genesis) {
-            this.shadowRoot.appendChild(this.render());
+        const rendered = this.render();
+
+        if (rendered) {
+            if (genesis) {
+                this.shadowRoot.appendChild(rendered);
+            } else {
+                const isFragment =
+                    ZeroDOM._getNodeType(rendered) === "fragment";
+
+                ZeroDOM.diff(
+                    rendered,
+                    isFragment ? this.shadowRoot : this.shadowRoot.firstChild
+                );
+
+                this._updateStyles();
+            }
         } else {
-            const rendered = this.render();
-            const isFragment = ZeroDOM._getNodeType(rendered) === "fragment";
-
-            ZeroDOM.diff(
-                rendered,
-                isFragment ? this.shadowRoot : this.shadowRoot.firstChild
-            );
+            this.shadowRoot.innerHTML = "";
         }
-
-        this._updateStyles();
     }
 
     _updateStyles() {

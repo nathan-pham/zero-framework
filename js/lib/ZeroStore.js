@@ -1,10 +1,8 @@
 export default class ZeroStore {
     subscriptions = [];
-
     initialState = {};
     state = {};
-
-    reducer = () => {};
+    reducer = null;
 
     constructor(initialState = {}, reducer = () => {}) {
         this.initialState = initialState;
@@ -38,27 +36,39 @@ export default class ZeroStore {
         const stateHandler = {
             set: (target, key, value) => {
                 target[key] = createProxy(value);
+
+                // if (this._debounce) {
+                //     cancelAnimationFrame(this._debounce);
+                // }
+
+                // this._debounce = requestAnimationFrame(() => {
                 this.subscriptions.forEach((subscription) => subscription());
+                // });
+
                 return true;
             },
         };
 
         const createProxy = (variable = {}) => {
-            if (Array.isArray(variable)) {
-                for (let i = 0; i < variable.length; i++) {
-                    variable[i] = createProxy(variable);
+            const canProxy = ["[object Object]", "[object Array]"].includes(
+                variable.toString()
+            );
+
+            if (canProxy) {
+                if (Array.isArray(variable)) {
+                    for (let i = 0; i < variable.length; i++) {
+                        variable[i] = createProxy(variable[i]);
+                    }
+                } else {
+                    for (const [key, value] of Object.entries(variable)) {
+                        variable[key] = createProxy(value);
+                    }
                 }
-            } else {
-                for (const [key, value] of Object.entries(variable)) {
-                    variable[key] = createProxy(value);
-                }
+
+                return new Proxy(variable, stateHandler);
             }
 
-            const canProxy =
-                (typeof variable == "object" || Array.isArray(variable)) &&
-                variable !== null;
-
-            return canProxy ? new Proxy(variable, stateHandler) : variable;
+            return variable;
         };
 
         return createProxy(state);

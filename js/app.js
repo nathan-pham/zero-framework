@@ -1,18 +1,21 @@
 import Zero, { ZeroUtils, ZeroStore } from "./index.js";
 const jsh = ZeroUtils.jsh;
 
-const globalStore = new ZeroStore({ count: 0 }, (state, action) => {
-    switch (action.type) {
-        case "increment":
-            return {
-                ...state,
-                count: state.count + 1,
-            };
+const globalStore = new ZeroStore(
+    { count: 0, example: "data type" },
+    (state, action) => {
+        switch (action.type) {
+            case "increment":
+                return {
+                    ...state,
+                    count: state.count + 1,
+                };
 
-        default:
-            return state;
+            default:
+                return state;
+        }
     }
-});
+);
 
 Zero.define(
     "z-counter",
