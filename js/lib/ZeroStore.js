@@ -2,6 +2,7 @@ export default class ZeroStore {
     subscriptions = [];
     initialState = {};
     state = {};
+
     reducer = null;
 
     constructor(initialState = {}, reducer = () => {}) {
@@ -36,15 +37,7 @@ export default class ZeroStore {
         const stateHandler = {
             set: (target, key, value) => {
                 target[key] = createProxy(value);
-
-                // if (this._debounce) {
-                //     cancelAnimationFrame(this._debounce);
-                // }
-
-                // this._debounce = requestAnimationFrame(() => {
                 this.subscriptions.forEach((subscription) => subscription());
-                // });
-
                 return true;
             },
         };

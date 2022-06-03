@@ -1,5 +1,9 @@
 // convert camel case to snake case
 const camelToSnake = (str) => {
+    if (str.startsWith("_")) {
+        return str.substring(1);
+    }
+
     let snakeCase = "";
 
     for (const char of str) {
@@ -13,16 +17,35 @@ const camelToSnake = (str) => {
 // create elements in js more easily
 const h = (tag, props = {}, children = []) => {
     const isFragment = tag === "fragment";
+    const isSvg = ["svg", "path"].includes(tag);
+
+    // prettier-ignore
     const element = isFragment
         ? document.createDocumentFragment()
-        : document.createElement(tag);
+        : isSvg
+            ? document.createElementNS(
+                props.xmlns || "http://www.w3.org/2000/svg",
+                tag
+            )
+            : document.createElement(tag);
 
     // set props & event listeners
     if (!isFragment) {
         for (const [key, value] of Object.entries(props)) {
-            key.startsWith("on")
-                ? (element[key.toLowerCase()] = value)
-                : element.setAttribute(key, value);
+            if (key === "style" && value.toString() === "[object Object]") {
+                const compiledStyle = [];
+                for (const [styleKey, styleValue] of Object.entries(value)) {
+                    compiledStyle.push(
+                        `${camelToSnake(styleKey)}: ${styleValue};`
+                    );
+                }
+
+                element.setAttribute("style", compiledStyle.join(" "));
+            } else {
+                key.startsWith("on")
+                    ? (element[key.toLowerCase()] = value)
+                    : element.setAttribute(camelToSnake(key), value);
+            }
         }
     }
 

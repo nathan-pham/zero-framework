@@ -62,29 +62,31 @@ export default class ZeroDOM {
         const templateNodes = [...template.childNodes];
 
         // update parent node attributes
-        if (this._getNodeType(template) !== this._getNodeType(elem)) {
-            elem.replaceWith(template);
-            return;
-        }
+        // if (this._getNodeType(template) !== this._getNodeType(elem)) {
+        //     elem.replaceWith(template.cloneNode(true));
+        //     return;
+        // }
 
         // removing extra elements
-        const count = domNodes.length - templateNodes.length;
+        let count = domNodes.length - templateNodes.length;
         if (count > 0) {
-            for (let i = count; i > 0; i--) {
+            for (; count > 0; count--) {
                 domNodes[domNodes.length - count].remove();
             }
         }
 
+        // ZeroDOM.update(template, elem);
+
         templateNodes.forEach((node, i) => {
             // create element if it does not exist
             if (!domNodes[i]) {
-                elem.appendChild(node);
+                elem.appendChild(node.cloneNode(true));
                 return;
             }
 
             // update node if same type, otherwise replace
             if (this._getNodeType(node) !== this._getNodeType(domNodes[i])) {
-                domNodes[i].replaceWith(node);
+                domNodes[i].replaceWith(node.cloneNode(true));
                 return;
             }
 

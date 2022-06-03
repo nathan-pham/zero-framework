@@ -1,6 +1,6 @@
 import ZeroDOM from "./ZeroDOM.js";
 import ZeroStore from "./ZeroStore.js";
-import { isFunction } from "./utils.js";
+import { isFunction, jsh } from "./utils.js";
 
 export default class Zero extends HTMLElement {
     props = {};
@@ -15,6 +15,7 @@ export default class Zero extends HTMLElement {
 
         if (!this.shadowRoot) {
             this.attachShadow({ mode: "open" });
+            this.shadowRoot.appendChild(jsh.div());
         }
     }
 
@@ -99,34 +100,58 @@ export default class Zero extends HTMLElement {
     _updateDOM(genesis) {
         const rendered = this.render();
 
-        if (rendered) {
-            if (genesis) {
-                this.shadowRoot.appendChild(rendered);
-            } else {
-                const isFragment =
-                    ZeroDOM._getNodeType(rendered) === "fragment";
+        this._updateStyles();
 
-                ZeroDOM.diff(
-                    rendered,
-                    isFragment ? this.shadowRoot : this.shadowRoot.firstChild
-                );
-
-                this._updateStyles();
+        if (genesis) {
+            if (rendered) {
+                this.shadowRoot.firstChild.appendChild(rendered);
             }
-        } else {
-            this.shadowRoot.innerHTML = "";
+
+            return;
         }
+
+        if (rendered) {
+            const isFragment = ZeroDOM._getNodeType(rendered) === "fragment";
+
+            ZeroDOM.diff(
+                isFragment
+                    ? jsh.div({}, [...rendered.childNodes])
+                    : jsh.div({}, rendered),
+                this.shadowRoot.firstChild
+            );
+        } else {
+            this.shadowRoot.firstChild.innerHTML = "";
+        }
+
+        // if (genesis && rendered) {
+        //     this.shadowRoot.appendChild(rendered);
+        // }
+
+        // if (rendered) {
+        //     if (genesis) {
+        //     } else {
+        //         const isFragment =
+        //             ZeroDOM._getNodeType(rendered) === "fragment";
+
+        //         ZeroDOM.diff(
+
+        //         );
+        //     }
+        // } else {
+        //     this.shadowRoot.innerHTML = "";
+        // }
     }
 
     _updateStyles() {
-        if (this._styleElement) {
+        const newStyle = isFunction(this.style) ? this.style() : this.style;
+
+        if (!this._styleElement && newStyle) {
             this._styleElement = document.createElement("style");
             this.shadowRoot.appendChild(this._styleElement);
         }
 
         // prettier-ignore
         // set new styles
-        const newStyle = isFunction(this.style) ? this.style() : this.style
         if (newStyle && newStyle !== this._styleElement.textContent) {
             this._styleElement.textContent = newStyle;
         }

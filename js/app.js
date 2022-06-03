@@ -4,10 +4,10 @@ const jsh = ZeroUtils.jsh;
 const globalStore = new ZeroStore(
     { count: 0, example: "data type" },
     (state, action) => {
+        console.log("dispatch");
         switch (action.type) {
             case "increment":
                 return {
-                    ...state,
                     count: state.count + 1,
                 };
 
@@ -22,6 +22,12 @@ Zero.define(
     class ZCounter extends Zero {
         store = globalStore;
 
+        style = `
+            .button {
+                color: red;
+            }
+        `;
+
         onClick() {
             globalStore.dispatch({
                 type: "increment",
@@ -31,14 +37,19 @@ Zero.define(
         render() {
             return jsh.fragment(
                 {},
-                jsh.p({}, `count: ${globalStore.state.count}`),
+                jsh.p(
+                    {
+                        style: {
+                            fontSize: "2rem",
+                        },
+                    },
+                    `count: ${globalStore.state.count}`
+                ),
 
                 jsh.button(
                     {
+                        class: "button",
                         onClick: () => this.onClick(),
-                        style: `color: ${
-                            globalStore.state.count < 10 ? "blue" : "red"
-                        }`,
                     },
                     "increment"
                 ),
