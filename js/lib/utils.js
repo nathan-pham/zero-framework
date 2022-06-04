@@ -33,14 +33,9 @@ const h = (tag, props = {}, children = []) => {
     if (!isFragment) {
         for (const [key, value] of Object.entries(props)) {
             if (key === "style" && value.toString() === "[object Object]") {
-                const compiledStyle = [];
-                for (const [styleKey, styleValue] of Object.entries(value)) {
-                    compiledStyle.push(
-                        `${camelToSnake(styleKey)}: ${styleValue};`
-                    );
-                }
-
-                element.setAttribute("style", compiledStyle.join(" "));
+                Object.assign(element.style, value);
+            } else if (key === "__innerHTML") {
+                element.innerHTML = value;
             } else {
                 key.startsWith("on")
                     ? (element[key.toLowerCase()] = value)

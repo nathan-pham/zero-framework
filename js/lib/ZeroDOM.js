@@ -75,23 +75,23 @@ export default class ZeroDOM {
             }
         }
 
-        // ZeroDOM.update(template, elem);
-
         templateNodes.forEach((node, i) => {
             // create element if it does not exist
             if (!domNodes[i]) {
-                elem.appendChild(node.cloneNode(true));
+                elem.appendChild(node);
                 return;
             }
 
             // update node if same type, otherwise replace
             if (this._getNodeType(node) !== this._getNodeType(domNodes[i])) {
-                domNodes[i].replaceWith(node.cloneNode(true));
+                domNodes[i].replaceWith(node);
                 return;
             }
 
             // update attributes
-            ZeroDOM.update(node, domNodes[i]);
+            if (this._getNodeType(node) !== "comment") {
+                ZeroDOM.update(node, domNodes[i]);
+            }
 
             // update content
             const templateContent = this._getNodeContent(node);

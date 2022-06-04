@@ -5,8 +5,6 @@ import { isFunction, jsh } from "./utils.js";
 export default class Zero extends HTMLElement {
     props = {};
     store = {};
-    style = "";
-
     _debounce = null;
     _mounted = false;
 
@@ -26,6 +24,7 @@ export default class Zero extends HTMLElement {
 
     // empty methods (overwrite in extended components)
     render() {}
+    style() {}
     mount() {}
     unmount() {}
 
@@ -122,24 +121,6 @@ export default class Zero extends HTMLElement {
         } else {
             this.shadowRoot.firstChild.innerHTML = "";
         }
-
-        // if (genesis && rendered) {
-        //     this.shadowRoot.appendChild(rendered);
-        // }
-
-        // if (rendered) {
-        //     if (genesis) {
-        //     } else {
-        //         const isFragment =
-        //             ZeroDOM._getNodeType(rendered) === "fragment";
-
-        //         ZeroDOM.diff(
-
-        //         );
-        //     }
-        // } else {
-        //     this.shadowRoot.innerHTML = "";
-        // }
     }
 
     _updateStyles() {
